@@ -27,8 +27,8 @@
 
         :root {
             /* Light mode colors */
-            --background-color: #f0f0f0;
-            --text-color: #333;
+            --background-color: #000000;
+            --text-color: #ffffff;
             --primary-color: #007BFF;
             --box-background-light: rgba(0, 123, 255, 0.1);
             --button-bg: #007BFF;
@@ -37,12 +37,12 @@
 
         [data-theme="dark"] {
             /* Dark mode colors */
-            --background-color: #121212;
+            --background-color: #222020;
             --text-color: #e0e0e0;
-            --primary-color: #BB86FC;
-            --box-background-dark: #2c2c2c; /* Lighter than dark background */
-            --button-bg: #BB86FC;
-            --button-hover-bg: #8f6fc4;
+            --primary-color: #FF9800;
+            --box-background-dark: #242323; /* Lighter than dark background */
+            --button-bg: #FF9800;
+            --button-hover-bg: #FF5722;
         }
 
         .container {
@@ -50,7 +50,7 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background-color: var(--background-color);
+            background-color: #202020;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
@@ -63,20 +63,22 @@
             border-radius: 5px;
             background-color: var(--box-background-light);
             height: 150px;  /* Fixed height */
-            width: 100%; /* Full width inside container */
-            overflow: hidden; /* No resizing based on text */
+            width: 600px; /* Fixed width */
+            overflow: hidden; /* Prevent resizing */
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
             transition: background-color 0.3s;
+            white-space: pre-wrap; /* Preserve whitespace */
+            overflow-wrap: break-word; /* Break long words */
         }
 
         [data-theme="dark"] #caption-box {
             background-color: var(--box-background-dark); /* Lighter box background for dark mode */
         }
 
-        #copy-button, #reset-button, #toggle-button {
+        #copy-button, #reset-button {
             padding: 12px 25px;
             font-size: 16px;
             background-color: var(--button-bg);
@@ -85,10 +87,10 @@
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s;
-            margin: 5px;
+            margin: 5px; /* Add margin for spacing */
         }
 
-        #copy-button:hover, #reset-button:hover, #toggle-button:hover {
+        #copy-button:hover, #reset-button:hover {
             background-color: var(--button-hover-bg);
         }
 
@@ -109,19 +111,9 @@
         .theme-toggle:hover {
             background-color: var(--button-hover-bg);
         }
-
-        /* Responsive styling */
-        @media (max-width: 600px) {
-            #caption-box {
-                font-size: 16px;
-                width: 100%;
-            }
-            #copy-button, #reset-button, #toggle-button {
-                font-size: 14px;
-                padding: 10px 20px;
-            }
+        h1 {
+        padding-bottom: 20px;
         }
-
         /* Style for caption info display */
         .caption-info {
             margin-top: 10px;
