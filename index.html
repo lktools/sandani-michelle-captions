@@ -111,15 +111,78 @@
             font-size: 16px;
             color: var(--primary-color);
         }
+
+        /* Toggle switch styles */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .toggle-label {
+            margin-right: 10px;
+            font-size: 16px;
+            color: var(--text-color);
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #007BFF;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>Caption Generator</h1>
-        <div>
-            <button id="toggle-michelle" onclick="toggleSource('michelle')">Michelle</button>
-            <button id="toggle-sandani" onclick="toggleSource('sandani')">Sandani</button>
+        <div class="toggle-container">
+            <span class="toggle-label">Source:</span>
+            <label class="toggle">
+                <input type="checkbox" id="source-toggle" onchange="toggleSource()">
+                <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Sandani</span>
         </div>
         <div id="caption-box">Loading...</div>
         <button id="copy-button" onclick="copyAndNext()">Copy & Next</button>
@@ -155,8 +218,9 @@
         }
 
         // Function to toggle between sources
-        function toggleSource(source) {
-            currentSource = source;
+        function toggleSource() {
+            const toggle = document.getElementById('source-toggle');
+            currentSource = toggle.checked ? 'sandani' : 'michelle';
             usedCaptions = []; // Clear used captions when switching sources
             localStorage.removeItem('usedCaptions'); // Clear used captions from local storage
             loadCaptions(); // Load captions from the selected source
