@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Caption Generator</title>
-    <link rel="icon" type="image/png" href="favicon.png"> <!-- Your favicon -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon"> <!-- Add your favicon -->
     <style>
         /* Base styles */
         * {
@@ -19,9 +19,30 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #121212;
-            color: #ffffff;
+            background-color: var(--background-color);
+            color: var(--text-color);
             transition: background-color 0.3s, color 0.3s;
+            position: relative;
+        }
+
+        :root {
+            /* Light mode colors */
+            --background-color: #f0f0f0;
+            --text-color: #333;
+            --primary-color: #007BFF;
+            --box-background-light: rgba(0, 123, 255, 0.1);
+            --button-bg: #007BFF;
+            --button-hover-bg: #0056b3;
+        }
+
+        [data-theme="dark"] {
+            /* Dark mode colors */
+            --background-color: #121212;
+            --text-color: #e0e0e0;
+            --primary-color: #BB86FC;
+            --box-background-dark: #2c2c2c; /* Lighter than dark background */
+            --button-bg: #BB86FC;
+            --button-hover-bg: #8f6fc4;
         }
 
         .container {
@@ -29,7 +50,7 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #1f1f1f;
+            background-color: var(--background-color);
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
@@ -38,53 +59,74 @@
             margin-bottom: 20px;
             padding: 20px;
             font-size: 20px;
-            border: 2px solid #007BFF;
+            border: 2px solid var(--primary-color);
             border-radius: 5px;
-            background-color: #292929;
-            height: 150px; /* Fixed height */
+            background-color: var(--box-background-light);
+            height: 150px;  /* Fixed height */
             width: 100%; /* Full width inside container */
             overflow: hidden; /* No resizing based on text */
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
+            transition: background-color 0.3s;
         }
 
-        #copy-button {
+        [data-theme="dark"] #caption-box {
+            background-color: var(--box-background-dark); /* Lighter box background for dark mode */
+        }
+
+        #copy-button, #reset-button, #toggle-button {
             padding: 12px 25px;
             font-size: 16px;
-            background-color: #007BFF;
+            background-color: var(--button-bg);
             color: #fff;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s;
+            margin: 5px;
         }
 
-        #copy-button:hover {
-            background-color: #0056b3;
+        #copy-button:hover, #reset-button:hover, #toggle-button:hover {
+            background-color: var(--button-hover-bg);
         }
 
-        #toggle-source {
-            padding: 12px 25px;
-            font-size: 16px;
-            background-color: #28a745;
+        .theme-toggle {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: var(--button-bg);
             color: #fff;
+            padding: 10px 20px;
             border: none;
             border-radius: 8px;
+            font-size: 14px;
             cursor: pointer;
             transition: background-color 0.3s;
-            margin: 10px;
         }
 
-        #toggle-source:hover {
-            background-color: #218838;
+        .theme-toggle:hover {
+            background-color: var(--button-hover-bg);
         }
 
+        /* Responsive styling */
+        @media (max-width: 600px) {
+            #caption-box {
+                font-size: 16px;
+                width: 100%;
+            }
+            #copy-button, #reset-button, #toggle-button {
+                font-size: 14px;
+                padding: 10px 20px;
+            }
+        }
+
+        /* Style for caption info display */
         .caption-info {
             margin-top: 10px;
             font-size: 16px;
-            color: #007BFF;
+            color: var(--primary-color);
         }
     </style>
 </head>
@@ -92,31 +134,32 @@
 
     <div class="container">
         <h1>Caption Generator</h1>
-        <button id="toggle-source" onclick="toggleSource()">Show Trees</button>
         <div id="caption-box">Loading...</div>
         <button id="copy-button" onclick="copyAndNext()">Copy & Next</button>
+        <button id="reset-button" onclick="resetCaptions()">Reset</button>
+        <button id="toggle-button" onclick="toggleCaptions()">Toggle to Sandani</button>
         <div class="caption-info">
             <span id="total-captions">Total Captions: 0</span> |
             <span id="remaining-captions">Remaining: 0</span>
         </div>
     </div>
+    <button class="theme-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
 
     <script>
         let captions = [];
         let usedCaptions = JSON.parse(localStorage.getItem('usedCaptions')) || [];
         let totalCaptionsCount = 0;
-        let currentSource = 'birds'; // Default source
+        let currentSource = 'michelle'; // Start with michelle
 
-        // Function to load captions based on the current source
+        // Function to load captions from the selected text file
         async function loadCaptions() {
-            const sourceFile = currentSource === 'birds' ? 'birds.txt' : 'trees.txt';
-
+            const fileName = currentSource === 'michelle' ? 'michelle.txt' : 'sandani.txt';
             try {
-                const response = await fetch(sourceFile);
+                const response = await fetch(fileName);
                 const text = await response.text();
                 captions = text.split('----').map(caption => caption.trim());
-                captions = captions.filter(caption => !usedCaptions.includes(caption));
-                totalCaptionsCount = captions.length + usedCaptions.length;
+                captions = captions.filter(caption => !usedCaptions.includes(caption)); // Remove already used captions
+                totalCaptionsCount = captions.length + usedCaptions.length; // Store the total count before filtering
                 shuffleCaptions();
                 updateCaptionInfo();
                 showCaption();
@@ -150,11 +193,11 @@
                 return;
             }
 
-            const nextCaption = captions.splice(Math.floor(Math.random() * captions.length), 1)[0];
+            const nextCaption = captions.splice(Math.floor(Math.random() * captions.length), 1)[0]; // Get and remove caption
             usedCaptions.push(nextCaption);
-            localStorage.setItem('usedCaptions', JSON.stringify(usedCaptions));
+            localStorage.setItem('usedCaptions', JSON.stringify(usedCaptions)); // Store used captions in local storage
             captionBox.textContent = nextCaption;
-            updateCaptionInfo();
+            updateCaptionInfo(); // Update the remaining captions
         }
 
         // Function to copy the current caption and show the next one
@@ -173,18 +216,28 @@
             showCaption();
         }
 
-        // Toggle source between birds and trees
-        function toggleSource() {
-            currentSource = currentSource === 'birds' ? 'trees' : 'birds';
-            document.getElementById('toggle-source').textContent = currentSource === 'birds' ? 'Show Trees' : 'Show Birds';
-            resetCaptions(); // Reset captions to load from the new source
+        // Function to reset captions
+        function resetCaptions() {
+            usedCaptions = [];
+            localStorage.setItem('usedCaptions', JSON.stringify(usedCaptions)); // Reset stored captions
+            loadCaptions(); // Reload captions
         }
 
-        // Reset function to load captions from the new source
-        function resetCaptions() {
-            usedCaptions = []; // Clear used captions
-            localStorage.removeItem('usedCaptions'); // Clear local storage
-            loadCaptions(); // Load captions again
+        // Function to toggle between caption sources
+        function toggleCaptions() {
+            currentSource = currentSource === 'michelle' ? 'sandani' : 'michelle'; // Toggle source
+            document.getElementById('toggle-button').textContent = `Toggle to ${currentSource === 'michelle' ? 'Sandani' : 'Michelle'}`;
+            resetCaptions(); // Reload captions from the new source
+        }
+
+        // Dark mode toggle
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
         }
 
         // Load captions on page load
