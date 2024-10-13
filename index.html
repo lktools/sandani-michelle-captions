@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Michelle & Sandani Captions</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon"> <!-- Add your favicon -->
     <style>
         /* Base styles */
         * {
@@ -78,7 +77,7 @@
             background-color: var(--box-background-dark); /* Lighter box background for dark mode */
         }
 
-        #copy-button, #reset-button #toggle-button {
+        #copy-button, #reset-button {
             padding: 12px 25px;
             font-size: 16px;
             background-color: var(--button-bg);
@@ -111,9 +110,11 @@
         .theme-toggle:hover {
             background-color: var(--button-hover-bg);
         }
+
         h1 {
-        padding-bottom: 20px;
+            padding-bottom: 20px;
         }
+
         /* Style for caption info display */
         .caption-info {
             margin-top: 10px;
@@ -126,10 +127,13 @@
 
     <div class="container">
         <h1>Michelle & Sandani Captions</h1>
+        <div>
+            <button id="toggle-michelle" onclick="toggleSource('michelle')">Michelle</button>
+            <button id="toggle-sandani" onclick="toggleSource('sandani')">Sandani</button>
+        </div>
         <div id="caption-box">Loading...</div>
         <button id="copy-button" onclick="copyAndNext()">Copy & Next</button>
-        <button id="reset-button" onclick="resetCaptions()">Reset</button>
-        <button id="toggle-button" onclick="toggleCaptions()">Toggle to Sandani</button>
+        <button id="reset-button" onclick="resetCaptions()">Reset Captions</button>
         <div class="caption-info">
             <span id="total-captions">Total Captions: 0</span> |
             <span id="remaining-captions">Remaining: 0</span>
@@ -139,17 +143,16 @@
 
     <script>
         let captions = [];
-        let usedCaptions = JSON.parse(localStorage.getItem('usedCaptions')) || [];
+        let usedCaptions = JSON.parse(localStorage.getItem('usedCaptions')) || []; // Load used captions from local storage
         let totalCaptionsCount = 0;
-        let currentSource = 'michelle'; // Start with michelle
+        let currentSource = 'michelle'; // Default source
 
         // Function to load captions from the selected text file
         async function loadCaptions() {
-            const fileName = currentSource === 'michelle' ? 'michelle.txt' : 'sandani.txt';
             try {
-                const response = await fetch(fileName);
+                const response = await fetch(currentSource + '.txt');
                 const text = await response.text();
-                captions = text.split('----').map(caption => caption.trim());
+                captions = text.split('----').flatMap(caption => caption.trim().split('\n')).map(c => c.trim()).filter(c => c); // Separate captions by ---- and trim
                 captions = captions.filter(caption => !usedCaptions.includes(caption)); // Remove already used captions
                 totalCaptionsCount = captions.length + usedCaptions.length; // Store the total count before filtering
                 shuffleCaptions();
@@ -159,6 +162,14 @@
                 console.error('Error fetching captions:', error);
                 document.getElementById('caption-box').textContent = 'Error loading captions!';
             }
+        }
+
+        // Function to toggle between sources
+        function toggleSource(source) {
+            currentSource = source;
+            usedCaptions = []; // Clear used captions when switching sources
+            localStorage.removeItem('usedCaptions'); // Clear used captions from local storage
+            loadCaptions(); // Load captions from the selected source
         }
 
         // Shuffle the captions array
@@ -208,18 +219,11 @@
             showCaption();
         }
 
-        // Function to reset captions
+        // Function to reset used captions
         function resetCaptions() {
-            usedCaptions = [];
-            localStorage.setItem('usedCaptions', JSON.stringify(usedCaptions)); // Reset stored captions
+            usedCaptions = []; // Clear used captions
+            localStorage.removeItem('usedCaptions'); // Clear used captions from local storage
             loadCaptions(); // Reload captions
-        }
-
-        // Function to toggle between caption sources
-        function toggleCaptions() {
-            currentSource = currentSource === 'michelle' ? 'sandani' : 'michelle'; // Toggle source
-            document.getElementById('toggle-button').textContent = `Toggle to ${currentSource === 'michelle' ? 'Sandani' : 'Michelle'}`;
-            resetCaptions(); // Reload captions from the new source
         }
 
         // Dark mode toggle
