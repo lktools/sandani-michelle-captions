@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caption Generator</title>
+    <link rel="icon" type="image/png" href="favicon.png"> <!-- Your favicon -->
+    <style>
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212;
+            color: #ffffff;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1f1f1f;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #caption-box {
+            margin-bottom: 20px;
+            padding: 20px;
+            font-size: 20px;
+            border: 2px solid #007BFF;
+            border-radius: 5px;
+            background-color: #292929;
+            height: 150px; /* Fixed height */
+            width: 100%; /* Full width inside container */
+            overflow: hidden; /* No resizing based on text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        #copy-button {
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #copy-button:hover {
+            background-color: #0056b3;
+        }
+
+        #toggle-source {
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 10px;
+        }
+
+        #toggle-source:hover {
+            background-color: #218838;
+        }
+
+        .caption-info {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Caption Generator</h1>
+        <button id="toggle-source" onclick="toggleSource()">Show Trees</button>
+        <div id="caption-box">Loading...</div>
+        <button id="copy-button" onclick="copyAndNext()">Copy & Next</button>
+        <div class="caption-info">
+            <span id="total-captions">Total Captions: 0</span> |
+            <span id="remaining-captions">Remaining: 0</span>
+        </div>
+    </div>
+
+    <script>
+        let captions = [];
+        let usedCaptions = JSON.parse(localStorage.getItem('usedCaptions')) || [];
+        let totalCaptionsCount = 0;
+        let currentSource = 'birds'; // Default source
+
+        // Function to load captions based on the current source
+        async function loadCaptions() {
+            const sourceFile = currentSource === 'birds' ? 'birds.txt' : 'trees.txt';
+
+            try {
+                const response = await fetch(sourceFile);
+                const text = await response.text();
+                captions = text.split('----').map(caption => caption.trim());
+                captions = captions.filter(caption => !usedCaptions.includes(caption));
+                totalCaptionsCount = captions.length + usedCaptions.length;
+                shuffleCaptions();
+                updateCaptionInfo();
+                showCaption();
+            } catch (error) {
+                console.error('Error fetching captions:', error);
+                document.getElementById('caption-box').textContent = 'Error loading captions!';
+            }
+        }
+
+        // Shuffle the captions array
+        function shuffleCaptions() {
+            for (let i = captions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [captions[i], captions[j]] = [captions[j], captions[i]];
+            }
+        }
+
+        // Function to update the captions info (total and remaining)
+        function updateCaptionInfo() {
+            document.getElementById('total-captions').textContent = `Total Captions: ${totalCaptionsCount}`;
+            document.getElementById('remaining-captions').textContent = `Remaining: ${captions.length}`;
+        }
+
+        // Function to display the current caption
+        function showCaption() {
+            const captionBox = document.getElementById('caption-box');
+
+            if (captions.length === 0) {
+                captionBox.textContent = "No more captions!";
+                document.getElementById('copy-button').disabled = true;
+                return;
+            }
+
+            const nextCaption = captions.splice(Math.floor(Math.random() * captions.length), 1)[0];
+            usedCaptions.push(nextCaption);
+            localStorage.setItem('usedCaptions', JSON.stringify(usedCaptions));
+            captionBox.textContent = nextCaption;
+            updateCaptionInfo();
+        }
+
+        // Function to copy the current caption and show the next one
+        function copyAndNext() {
+            const captionBox = document.getElementById('caption-box');
+            const currentCaption = captionBox.textContent;
+
+            navigator.clipboard.writeText(currentCaption)
+                .then(() => {
+                    console.log('Copied to clipboard:', currentCaption);
+                })
+                .catch(err => {
+                    console.error('Could not copy text:', err);
+                });
+
+            showCaption();
+        }
+
+        // Toggle source between birds and trees
+        function toggleSource() {
+            currentSource = currentSource === 'birds' ? 'trees' : 'birds';
+            document.getElementById('toggle-source').textContent = currentSource === 'birds' ? 'Show Trees' : 'Show Birds';
+            resetCaptions(); // Reset captions to load from the new source
+        }
+
+        // Reset function to load captions from the new source
+        function resetCaptions() {
+            usedCaptions = []; // Clear used captions
+            localStorage.removeItem('usedCaptions'); // Clear local storage
+            loadCaptions(); // Load captions again
+        }
+
+        // Load captions on page load
+        window.onload = loadCaptions;
+    </script>
+
+</body>
+</html>
